@@ -3,11 +3,17 @@
 BitScale MCP Server
 Exposes BitScale API endpoints as tools for Claude via the Model Context Protocol.
 
-Usage:
-    BITSCALE_API_KEY=your_key_here python bitscale_mcp.py
-
-Requirements:
-    pip install mcp httpx
+Quickstart (no cloning needed):
+    Add to your claude_desktop_config.json:
+    {
+      "mcpServers": {
+        "bitscale": {
+          "command": "uvx",
+          "args": ["--from", "git+https://github.com/featherflow/bitscale-mcp", "bitscale-mcp"],
+          "env": { "BITSCALE_API_KEY": "your_key_here" }
+        }
+      }
+    }
 """
 
 import os
@@ -176,5 +182,10 @@ def rotate_api_key() -> str:
 
 # ── Entry Point ──────────────────────────────────────────────────────────────
 
-if __name__ == "__main__":
+def run():
+    """Entry point used by the pyproject.toml console script."""
     mcp.run()
+
+
+if __name__ == "__main__":
+    run()

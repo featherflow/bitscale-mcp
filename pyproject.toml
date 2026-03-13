@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bitscale-mcp"
+version = "0.1.0"
+description = "MCP server for BitScale — connect your BitScale workspace to Claude"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+keywords = ["mcp", "bitscale", "claude", "ai", "model-context-protocol"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.scripts]
+bitscale-mcp = "main:run"
+
+[project.urls]
+Homepage = "https://github.com/featherflow/bitscale-mcp"
+Repository = "https://github.com/featherflow/bitscale-mcp"
