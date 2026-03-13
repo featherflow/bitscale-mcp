@@ -1,0 +1,2 @@
+# bitscale-mcp
+Bitscale MCP
