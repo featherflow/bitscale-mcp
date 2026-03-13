@@ -26,3 +26,6 @@ bitscale-mcp = "main:run"
 [project.urls]
 Homepage = "https://github.com/featherflow/bitscale-mcp"
 Repository = "https://github.com/featherflow/bitscale-mcp"
+
+[tool.hatch.build.targets.wheel]
+include = ["main.py"]
