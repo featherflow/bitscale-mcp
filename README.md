@@ -43,12 +43,12 @@ That's it. No cloning, no pip install — `uvx` pulls and runs the package autom
 
 | Tool | Description |
 |------|-------------|
-| `get_workspace_details` | Get workspace name, plan, and member info |
-| `list_grids` | List all Grids with optional search & pagination |
-| `get_grid_details` | Fetch a Grid's column schema and row data |
-| `run_grid` | Trigger a Grid run (full or selected rows) |
-| `get_run_status` | Poll the status of a Grid run |
-| `rotate_api_key` | Rotate the workspace API key |
+| `get_workspace_details` | Get workspace plan, credit balances, search limits, and member counts |
+| `list_grids` | List all grids with optional search & pagination, returns column definitions |
+| `get_grid_details` | Get a grid's full schema — columns, settings, and data sources |
+| `run_grid` | Run a grid by providing input values, supports sync and async modes |
+| `get_run_status` | Poll the status of an async or timed-out grid run by request_id |
+| `rotate_api_key` | Rotate the workspace API key (irreversible, invalidates current key) |
 
 ---
 
@@ -56,11 +56,22 @@ That's it. No cloning, no pip install — `uvx` pulls and runs the package autom
 
 > *"List all my BitScale grids"*
 
-> *"Run the Leads Enrichment grid"*
+> *"Show me the details of the Lead Enrichment grid"*
 
-> *"What columns does my Outbound grid have?"*
+> *"Run the Lead Enrichment grid with company_name 'Acme Corp' and website 'acme.com'"*
 
-> *"Check the status of run xyz456 on grid abc123"*
+> *"Find phone numbers for people at Stripe using my BitScale grid"*
+
+> *"Check the status of run 550e8400-e29b-41d4-a716-446655440000"*
+
+---
+
+## How Grid Runs Work
+
+1. **Discover grids** — call `list_grids` to find available grids and their IDs.
+2. **Inspect the grid** — call `get_grid_details` with the grid ID to see column definitions. Text-type columns are inputs; enrichment/formula/merge columns produce outputs.
+3. **Run the grid** — call `run_grid` with the grid ID and an `inputs` map of column keys to values. In sync mode (default), results return directly within 120 seconds. In async mode, you get a `request_id` to poll.
+4. **Poll if needed** — if the run is still processing, call `get_run_status` with the `request_id` every 2-5 seconds until status is `completed`.
 
 ---
 
@@ -77,7 +88,7 @@ claude mcp add bitscale \
 
 ## API Reference
 
-Requests hit `https://api.bitscale.ai/api/v1`, authenticated via `X-API-KEY`. Default rate limit: **5 req/s** per workspace.
+Requests hit `https://api.bitscale.ai/api/v1`, authenticated via `X-API-KEY` header. Default rate limit: **5 req/s** per workspace.
 
 | Endpoint | Method | Tool |
 |----------|--------|------|
@@ -85,14 +96,14 @@ Requests hit `https://api.bitscale.ai/api/v1`, authenticated via `X-API-KEY`. De
 | `/grids` | GET | `list_grids` |
 | `/grids/:gridId` | GET | `get_grid_details` |
 | `/grids/:gridId/run` | POST | `run_grid` |
-| `/grids/:gridId/runs/:runId` | GET | `get_run_status` |
-| `/rotate-api-key` | POST | `rotate_api_key` |
+| `/run/status/:requestId` | GET | `get_run_status` |
+| `/api-key/rotate` | POST | `rotate_api_key` |
 
 ---
 
-## ⚠️ API Key Rotation
+## API Key Rotation
 
-Calling `rotate_api_key` immediately invalidates the current key. Update `BITSCALE_API_KEY` in your config and restart Claude Desktop after rotating.
+Calling `rotate_api_key` immediately invalidates the current key and returns a new one. Update `BITSCALE_API_KEY` in your config and restart Claude Desktop after rotating.
 
 ---
 
