@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "bitscale-mcp"
-version = "0.1.2"
+version = "0.1.3"
 description = "MCP server for BitScale — connect your BitScale workspace to Claude"
 readme = "README.md"
 license = { text = "MIT" }

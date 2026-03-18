@@ -261,6 +261,48 @@ def get_run_status(request_id: str) -> str:
 
 
 @mcp.tool()
+def get_grid_curl(
+    grid_id: str,
+    output_columns: str = "",
+) -> str:
+    """
+    Get a ready-to-use curl command and structured API contract for running
+    a specific Grid. Call this BEFORE run_grid to discover the exact input
+    fields required by the grid — no trial and error needed.
+
+    This endpoint returns the derived required inputs (traced from column
+    dependencies), the full run URL, request body shape, and a copy-paste-
+    ready curl command.
+
+    💡 Recommended workflow:
+        1. Call get_grid_curl to discover the exact input fields.
+        2. Call run_grid with the returned inputs shape and real values.
+
+    Args:
+        grid_id:        UUID of the grid. Found in the grid URL at
+                        app.bitscale.ai/grid/{gridId}, or from list_grids.
+        output_columns: Optional comma-separated list of column key IDs to
+                        include in the run. When provided, required inputs are
+                        derived only from the dependencies of the specified
+                        columns. When omitted, inputs are derived from all
+                        runnable columns in the grid.
+                        Example: "col-uuid-1,col-uuid-2"
+
+    Returns: grid_id, grid_name, run_url, method, headers, request_body
+    (with mode, inputs shape, and optional output_columns), output_columns
+    array (id, name, type for each requested column), and a curl string
+    ready to copy-paste into a terminal (replace YOUR_WORKSPACE_API_KEY).
+    """
+    if not grid_id:
+        raise ValueError("grid_id must not be empty")
+    params: dict = {}
+    if output_columns:
+        params["output_columns"] = output_columns
+    data = _get(f"/grids/{grid_id}/curl", params=params if params else None)
+    return json.dumps(data, indent=2)
+
+
+@mcp.tool()
 def rotate_api_key() -> str:
     """
     Generate a new workspace API key and immediately invalidate the current one.
