@@ -69,9 +69,42 @@ That's it. No cloning, no pip install — `uvx` pulls and runs the package autom
 ## How Grid Runs Work
 
 1. **Discover grids** — call `list_grids` to find available grids and their IDs.
-2. **Inspect the grid** — call `get_grid_details` with the grid ID to see column definitions. Text-type columns are inputs; enrichment/formula/merge columns produce outputs.
-3. **Run the grid** — call `run_grid` with the grid ID and an `inputs` map of column keys to values. In sync mode (default), results return directly within 120 seconds. In async mode, you get a `request_id` to poll.
+2. **Inspect the grid** — call `get_grid_details` with the grid ID to see column definitions and understand the schema.
+3. **Run the grid** — call `run_grid` with the grid ID and an `inputs` map of **human-readable labels** to values. In sync mode (default), results return directly within 120 seconds. In async mode, you get a `request_id` to poll.
 4. **Poll if needed** — if the run is still processing, call `get_run_status` with the `request_id` every 2-5 seconds until status is `completed`.
+
+### Input Labels vs Output Column UUIDs
+
+This is an important distinction when using `run_grid`:
+
+- **`inputs`** — uses **human-readable labels** like `"company_name"`, `"website"`, `"email"`. These labels are derived from the source columns configured on the grid's BitScale API data source. They are **not** column UUIDs. You can find the exact labels in the BitScale app by clicking the Data Source column → BitScale API source.
+
+  ```json
+  "inputs": {
+    "company_name": "Acme Corp",
+    "website": "acme.com"
+  }
+  ```
+
+- **`output_columns`** — uses **column UUIDs** from `get_grid_details` to filter which enriched columns appear in the response.
+
+  ```json
+  "output_columns": [
+    "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+    "6ba7b811-9dad-11d1-80b4-00c04fd430c8"
+  ]
+  ```
+
+- **Response `outputs`** — keyed by **column UUIDs**, each containing `{value, name}` where `name` is the human-readable display name.
+
+  ```json
+  "outputs": {
+    "6ba7b810-9dad-11d1-80b4-00c04fd430c8": {
+      "value": "AI-powered data enrichment platform",
+      "name": "Company Description"
+    }
+  }
+  ```
 
 ---
 
