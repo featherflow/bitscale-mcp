@@ -9,6 +9,7 @@ Connect your [BitScale](https://bitscale.ai) workspace to Claude via the [Model 
 **macOS / Linux**
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
+or bew install uv
 ```
 **Windows**
 ```powershell
