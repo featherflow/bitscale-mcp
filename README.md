@@ -46,6 +46,7 @@ That's it. No cloning, no pip install — `uvx` pulls and runs the package autom
 | `get_workspace_details` | Get workspace plan, credit balances, search limits, and member counts |
 | `list_grids` | List all grids with optional search & pagination, returns column definitions |
 | `get_grid_details` | Get a grid's full schema — columns, settings, and data sources |
+| `get_grid_curl` | Get a ready-to-use curl command and API contract for running a grid — call this first to discover required inputs |
 | `run_grid` | Run a grid by providing input values, supports sync and async modes |
 | `get_run_status` | Poll the status of an async or timed-out grid run by request_id |
 | `rotate_api_key` | Rotate the workspace API key (irreversible, invalidates current key) |
@@ -58,6 +59,8 @@ That's it. No cloning, no pip install — `uvx` pulls and runs the package autom
 
 > *"Show me the details of the Lead Enrichment grid"*
 
+> *"Get the curl command for the Lead Enrichment grid"*
+
 > *"Run the Lead Enrichment grid with company_name 'Acme Corp' and website 'acme.com'"*
 
 > *"Find phone numbers for people at Stripe using my BitScale grid"*
@@ -69,8 +72,8 @@ That's it. No cloning, no pip install — `uvx` pulls and runs the package autom
 ## How Grid Runs Work
 
 1. **Discover grids** — call `list_grids` to find available grids and their IDs.
-2. **Inspect the grid** — call `get_grid_details` with the grid ID to see column definitions and understand the schema.
-3. **Run the grid** — call `run_grid` with the grid ID and an `inputs` map of **human-readable labels** to values. In sync mode (default), results return directly within 120 seconds. In async mode, you get a `request_id` to poll.
+2. **Get the API contract** — call `get_grid_curl` with the grid ID to get the exact input fields required, a shaped request body, and a copy-paste curl command. This is the recommended way to understand what a grid needs before running it.
+3. **Run the grid** — call `run_grid` with the grid ID and an `inputs` map of **human-readable labels** to values (as returned by `get_grid_curl`). In sync mode (default), results return directly within 120 seconds. In async mode, you get a `request_id` to poll.
 4. **Poll if needed** — if the run is still processing, call `get_run_status` with the `request_id` every 2-5 seconds until status is `completed`.
 
 ### Input Labels vs Output Column UUIDs
@@ -128,6 +131,7 @@ Requests hit `https://api.bitscale.ai/api/v1`, authenticated via `X-API-KEY` hea
 | `/workspace` | GET | `get_workspace_details` |
 | `/grids` | GET | `list_grids` |
 | `/grids/:gridId` | GET | `get_grid_details` |
+| `/grids/:gridId/curl` | GET | `get_grid_curl` |
 | `/grids/:gridId/run` | POST | `run_grid` |
 | `/run/status/:requestId` | GET | `get_run_status` |
 | `/api-key/rotate` | POST | `rotate_api_key` |
