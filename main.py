@@ -105,10 +105,13 @@ def list_grids(
     Returns: paginated list of grids, each with id, name, description,
     row_count, column_count, created_at, updated_at, and columns array.
     The columns array contains only runnable columns (type: enrichment,
-    formula, or merge) with their id (column key), name, type, and
+    formula, or merge) with their id (column UUID), name, type, and
     dependencies.
 
     Use the grid id from the results to call get_grid_details or run_grid.
+    Note: the column UUIDs here are used for output_columns in run_grid.
+    The input labels for run_grid are separate human-readable keys derived
+    from the grid's API data source configuration.
     """
     params: dict = {"page": page, "limit": limit}
     if search:
@@ -124,7 +127,8 @@ def get_grid_details(grid_id: str) -> str:
     grid settings, and attached data sources.
 
     Use this to inspect a grid's schema before running it — especially to
-    find the input column keys needed for the run_grid tool.
+    understand the grid's input labels and output column UUIDs needed for
+    the run_grid tool.
 
     Args:
         grid_id: UUID of the grid. Found in the grid URL at
@@ -135,8 +139,16 @@ def get_grid_details(grid_id: str) -> str:
     columns (all columns including text, enrichment, formula, merge types
     with their id/key and name), and sources (data sources with schedule info).
 
-    The column 'id' values are the keys you use in the 'inputs' parameter
-    when calling run_grid. Text-type columns are typically the input columns.
+    NOTE on columns vs run_grid inputs:
+    - The column 'id' values here are UUIDs — use these for the
+      'output_columns' parameter of run_grid to filter which outputs
+      you want.
+    - The 'inputs' parameter of run_grid uses human-readable LABELS
+      (e.g. "company_name", "website"), NOT column UUIDs. These labels
+      are derived from the API data source columns configured on the
+      grid. You can find the exact input labels in the BitScale app
+      under the grid's Data Source → BitScale API panel, or by
+      inspecting the source column names.
     """
     if not grid_id:
         raise ValueError("grid_id must not be empty")
@@ -160,30 +172,44 @@ def run_grid(
     to the grid, runs all enrichment/formula/merge columns, and returns the
     enriched outputs.
 
-    IMPORTANT: Before calling this, use get_grid_details to find the correct
-    input column keys for the grid. The 'inputs' keys must match the column
-    keys shown in the grid's column definitions (text-type columns).
+    IMPORTANT — inputs vs output_columns use DIFFERENT key formats:
+    - 'inputs' uses human-readable LABELS (e.g. "company_name", "website")
+      — these are NOT UUIDs. The labels are derived from the source columns
+      configured on the grid's BitScale API data source. You can find the
+      exact labels in the BitScale app by clicking the Data Source column,
+      selecting the BitScale API source, and looking at the input fields.
+    - 'output_columns' uses column UUIDs from get_grid_details to filter
+      which output columns to return.
+
+    Before calling this, use get_grid_details to understand the grid schema.
+    To discover the exact input labels, check the grid's API data source
+    panel in the BitScale app, or look at the source column configuration.
 
     Args:
         grid_id: UUID of the grid to run. Found in grid URL or list_grids.
-        inputs:  Key-value map of input column keys to their values.
+        inputs:  Key-value map of input LABELS to their values. These are
+                 human-readable keys like "company_name", "website", "email"
+                 — NOT column UUIDs.
                  Example: {"company_name": "Acme Corp", "website": "acme.com"}
-                 Use the column key (id) from get_grid_details, not the
-                 display name.
         mode:    Execution mode — "sync" (default) or "async".
                  - sync: waits up to 120 seconds for completion, returns
                    outputs directly. If still processing, returns a
                    request_id to poll with get_run_status.
                  - async: returns a request_id immediately. Poll
                    get_run_status for results.
-        output_columns: Optional list of column UUID keys to include in the
-                        response. If omitted, all enriched columns are returned.
+        output_columns: Optional list of column UUIDs to include in the
+                        response. Use the column 'id' values from
+                        get_grid_details. If omitted, all enriched columns
+                        are returned.
         source_id: Optional UUID of a specific BitScale API data source on
                    the grid. If omitted, the first available source is used.
 
     Returns:
-    - sync completed: {mode, status: "completed", outputs: {column_id: {value, name}}}
+    - sync completed: {mode, status: "completed", outputs: {column_uuid: {value, name}}}
     - sync timeout or async: {mode, status: "running", request_id, poll_url}
+
+    The outputs object keys are column UUIDs, each containing {value, name}
+    where 'name' is the human-readable column display name.
 
     If status is "running", use get_run_status with the returned request_id
     to poll for completion (every 2-5 seconds).
